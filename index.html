@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form action="/addProduct" method="post">
+        <div class="mb-3">
+            <label for="name" className="form-label">Name</label>
+            <input type="text" name="name" placeholder="name" className="form-control" id="name"></input>
+        </div>
+        <div class="mb-3">
+            <label for="price" className="form-label">Price</label>
+            <input type="text" name="price" placeholder="price" className="form-control" id="price"></input>
+        </div>
+        <div class="mb-3">
+            <label for="category" className="form-label">Category</label>
+            <input type="text" name="category" placeholder="category" className="form-control" id="category"></input>
+        </div>
+        <div class="mb-3">
+            <label for="image" className="form-label">Image</label>
+            <input type="file" name="image" placeholder="image" className="form-control" id="description"></input>
+        </div>
+        <div class="mb-3">
+            <label for="description" className="form-label">Description</label>
+            <input type="name" name="description" placeholder="description" className="form-control"
+                id="description"></input>
+        </div>
+        <button type="submit" className="btn btn-danger">Submit</button>
+    </form>
+    <div id="container">
+        
+    </div>
+    <script>
+        fetch('/product')
+        .then(response => response.json())
+        .then(products => {
+            // console.log(products);
+            const contain = document.getElementById('container');
+            products.forEach(product =>{
+                const paragraph = document.createElement('p');
+                paragraph.innerText = `${product.name} <button onclick=deleteProduct(${product._id})>delete</button>`;
+                contain.appendChild(paragraph);
+            })
+        })
+    </script>
+</body>
+
+</html>
