@@ -55,31 +55,6 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tmhor.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-// client.connect(err => {
-//   const productCollection = client.db(`${process.env.DB_NAME}`).collection("products");
-
-//   app.get('/product',(req, res) => {
-//     // productCollection.find({}).limit(4)
-//       productCollection.find({}).toArray((err,documents)=>{
-//         res.send(documents)
-//       })
-//   })
-
-//   app.post("/addProduct", (req, res) => {
-//     const product = req.body;
-//     console.log(product);
-//     productCollection.insertOne(product)
-//       .then(res => {
-//         console.log("Data added successfully");
-//         res.send("Congratulations, Data added successfully");
-//       })
-//       .catch(err => {
-//         console.log(err);
-//       })
-//   })
-//   console.log('Database connected');
-//   // client.close();
-// });
 async function run() {
   try {
     await client.connect();
@@ -91,6 +66,14 @@ async function run() {
       const products = await cursor.toArray();
       res.send(products);
     });
+
+    app.get('/products/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = {_id:ObjectId(id)};
+        const findProduct = await productCollection.findOne(query);
+        console.log("this is id ",id);
+        res.send(findProduct);
+    });
     // post data
     app.post('/products', async (req, res) => {
       const product = req.body;
@@ -99,6 +82,26 @@ async function run() {
       console.log(`A document was inserted with the _id: ${result.insertedId}`);
       res.json(result);
     });
+    // put data or update data
+    app.put('/products/:id', async (req, res)=>{
+      const id = req.params.id;
+      const updateProduct = req.body;
+      const filter = {_id:ObjectId(id)};
+      const options = {upsert:true};
+      const updateProductDetails = {
+        $set: {
+          name: updateProduct.name,
+          price:updateProduct.price,
+          imageUrl:updateProduct.imageUrl,
+          category:updateProduct.category,
+          description:updateProduct.description
+        },
+      };
+      const update = await productCollection.updateOne(filter, updateProductDetails, options);
+      console.log("put hitted ",req.body);
+      res.json(update);
+      res.send(id);
+    })
     // delete data
     app.delete('/products/:id', async (req, res) => {
       const id = req.params.id;
