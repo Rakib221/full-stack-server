@@ -62,9 +62,23 @@ async function run() {
     const productCollection = database.collection("products");
     // get data
     app.get('/products', async (req, res) => {
+      // console.log(req.query);
+      const page = req.query.page;
+      const size = parseInt(req.query.numberOfProPerPage);
       const cursor = productCollection.find({});
-      const products = await cursor.toArray();
-      res.send(products);
+      let products;
+      const count = await cursor.count();
+      if (page) {
+        products = await cursor.skip(page*size).limit(size).toArray();
+      }
+      else{
+        products = await cursor.toArray();
+      }
+      // const products = await cursor.limit(10).toArray();
+  
+      // const count = await cursor.countDocuments();
+      res.send({count,products});
+      // res.send(products);
     });
 
     app.get('/products/:id', async (req, res) => {
@@ -109,6 +123,16 @@ async function run() {
       const result = await productCollection.deleteOne(query);
       console.log("Deleting id ",result);
       res.json(result);
+    })
+    // use post to get data by keys
+    app.post('/products/keys', async (req, res) =>{
+        console.log(req.body);
+        const keys = req.body;
+        const query = {key: {$in:keys}};
+        const productsByKey = await productCollection.find(query).toArray();
+        console.log(productsByKey);
+        // res.send(productsByKey);
+        res.json(productsByKey);
     })
   } finally {
     // await client.close();
