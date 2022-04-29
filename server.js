@@ -60,6 +60,7 @@ async function run() {
     await client.connect();
     const database = client.db(`${process.env.DB_NAME}`);
     const productCollection = database.collection("products");
+    const orderCollection = database.collection("orders");
     // get data
     app.get('/products', async (req, res) => {
       // console.log(req.query);
@@ -133,6 +134,13 @@ async function run() {
         console.log(productsByKey);
         // res.send(productsByKey);
         res.json(productsByKey);
+    })
+    // orders collection
+    app.post('/orders', async (req, res) => {
+        const orders = req.body;
+        const insertOrders = await orderCollection.insertOne(orders);
+        console.log(orders);
+        res.json(insertOrders);
     })
   } finally {
     // await client.close();
