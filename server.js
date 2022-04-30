@@ -3,7 +3,6 @@ const app = express();
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const ObjectId = require('mongodb').ObjectId;
-const port = process.env.PORT||7777;
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -11,6 +10,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors())
 
 require('dotenv').config();
+const port = process.env.PORT||7777;
 
 // const stars = [
 //   { name: "Lionel Messi", id: 10, position: "CF,RWF,AMF,FALSE NINE STRIKER,SS,RMF" },
