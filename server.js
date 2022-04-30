@@ -3,7 +3,7 @@ const app = express();
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const ObjectId = require('mongodb').ObjectId;
-const port = 7777;
+const port = process.env.PORT||7777;
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -126,13 +126,23 @@ async function run() {
       res.json(result);
     })
     // use post to get data by keys
-    app.post('/products/keys', async (req, res) =>{
+    app.post('/products/_id', async (req, res) =>{
         console.log(req.body);
-        const keys = req.body;
-        const query = {key: {$in:keys}};
+        // const keys = req.body;
+        const id = req.body;
+        // let newId;
+        // let arrayOfId = [];
+        // id.forEach(i=>{
+        //   newId = ObjectId(i);
+        //   arrayOfId.push(newId);
+        // });
+        // console.log(arrayOfId);
+        // const query = {_id: {$in:ObjectId(id)}};
+        const query = {key: {$in:id}};
+        console.log(query);
         const productsByKey = await productCollection.find(query).toArray();
         console.log(productsByKey);
-        // res.send(productsByKey);
+        // // res.send(productsByKey);
         res.json(productsByKey);
     })
     // orders collection
@@ -148,5 +158,8 @@ async function run() {
 }
 run().catch(console.err);
 
+app.get('/',(req, res)=>{
+  res.send("Mega project server running successfully");
+});
 
 app.listen(port, () => console.log(`Sever running on port ${port}`));
