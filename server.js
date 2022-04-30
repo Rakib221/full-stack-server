@@ -162,4 +162,4 @@ app.get('/',(req, res)=>{
   res.send("Mega project server running successfully");
 });
 
-app.listen(port, () => console.log(`Sever running on port ${port}`));
+app.listen(port, () => console.log(`Server running on port ${port}`));
