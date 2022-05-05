@@ -40,7 +40,7 @@
         fetch('/product')
         .then(response => response.json())
         .then(products => {
-            // console.log(products);
+            console.log(products);
             const contain = document.getElementById('container');
             products.forEach(product =>{
                 const paragraph = document.createElement('p');
