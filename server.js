@@ -148,10 +148,28 @@ async function run() {
     // orders collection
     app.post('/orders', async (req, res) => {
         const orders = req.body;
+        orders.createAt = new Date();
         const insertOrders = await orderCollection.insertOne(orders);
         console.log(orders);
         res.json(insertOrders);
     })
+    // get data by email
+    app.get('/orders', async (req, res)=>{
+      let query = {};
+      const email = req.query.email;
+      console.log(email);
+      if (email) {
+        query = { authEmail: email};
+      }
+      const cursor = orderCollection.find(query);
+      const allOrders = await cursor.toArray();
+      res.json(allOrders);
+    })
+    // use post to get data by auth email;
+    // app.post('/ordersByEmail', async (req, res) => {
+    //   const ordersByEmail = req.body;
+    //   console.log(ordersByEmail);
+    // })
   } finally {
     // await client.close();
   }
