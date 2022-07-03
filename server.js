@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors())
 
 require('dotenv').config();
-const port = process.env.PORT||7777;
+const port = process.env.PORT || 7777;
 
 // const stars = [
 //   { name: "Lionel Messi", id: 10, position: "CF,RWF,AMF,FALSE NINE STRIKER,SS,RMF" },
@@ -70,24 +70,34 @@ async function run() {
       let products;
       const count = await cursor.count();
       if (page) {
-        products = await cursor.skip(page*size).limit(size).toArray();
+        products = await cursor.skip(page * size).limit(size).toArray();
       }
-      else{
+      else {
         products = await cursor.toArray();
       }
       // const products = await cursor.limit(10).toArray();
-  
+
       // const count = await cursor.countDocuments();
-      res.send({count,products});
+      res.send({ count, products });
       // res.send(products);
     });
 
+    // get orders
+    app.get('/orders', async (req, res) => {
+      const uid = req.query.uid;
+      const query = { uid: uid };
+      console.log("query is", query);
+      const cursor = orderCollection.find(query);
+      const orders = await cursor.toArray();
+      res.json(orders);
+    });
+
     app.get('/products/:id', async (req, res) => {
-        const id = req.params.id;
-        const query = {_id:ObjectId(id)};
-        const findProduct = await productCollection.findOne(query);
-        console.log("this is id ",id);
-        res.send(findProduct);
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const findProduct = await productCollection.findOne(query);
+      console.log("this is id ", id);
+      res.send(findProduct);
     });
     // post data
     app.post('/products', async (req, res) => {
@@ -98,68 +108,68 @@ async function run() {
       res.json(result);
     });
     // put data or update data
-    app.put('/products/:id', async (req, res)=>{
+    app.put('/products/:id', async (req, res) => {
       const id = req.params.id;
       const updateProduct = req.body;
-      const filter = {_id:ObjectId(id)};
-      const options = {upsert:true};
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
       const updateProductDetails = {
         $set: {
           name: updateProduct.name,
-          price:updateProduct.price,
-          imageUrl:updateProduct.imageUrl,
-          category:updateProduct.category,
-          description:updateProduct.description
+          price: updateProduct.price,
+          imageUrl: updateProduct.imageUrl,
+          category: updateProduct.category,
+          description: updateProduct.description
         },
       };
       const update = await productCollection.updateOne(filter, updateProductDetails, options);
-      console.log("put hitted ",req.body);
+      console.log("put hitted ", req.body);
       res.json(update);
       res.send(id);
     })
     // delete data
     app.delete('/products/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id:ObjectId(id)};
+      const query = { _id: ObjectId(id) };
       const result = await productCollection.deleteOne(query);
-      console.log("Deleting id ",result);
+      console.log("Deleting id ", result);
       res.json(result);
     })
     // use post to get data by keys
-    app.post('/products/_id', async (req, res) =>{
-        console.log(req.body);
-        // const keys = req.body;
-        const id = req.body;
-        // let newId;
-        // let arrayOfId = [];
-        // id.forEach(i=>{
-        //   newId = ObjectId(i);
-        //   arrayOfId.push(newId);
-        // });
-        // console.log(arrayOfId);
-        // const query = {_id: {$in:ObjectId(id)}};
-        const query = {key: {$in:id}};
-        console.log(query);
-        const productsByKey = await productCollection.find(query).toArray();
-        console.log(productsByKey);
-        // // res.send(productsByKey);
-        res.json(productsByKey);
+    app.post('/products/_id', async (req, res) => {
+      console.log(req.body);
+      // const keys = req.body;
+      const id = req.body;
+      // let newId;
+      // let arrayOfId = [];
+      // id.forEach(i=>{
+      //   newId = ObjectId(i);
+      //   arrayOfId.push(newId);
+      // });
+      // console.log(arrayOfId);
+      // const query = {_id: {$in:ObjectId(id)}};
+      const query = { key: { $in: id } };
+      console.log(query);
+      const productsByKey = await productCollection.find(query).toArray();
+      console.log(productsByKey);
+      // // res.send(productsByKey);
+      res.json(productsByKey);
     })
     // orders collection
     app.post('/orders', async (req, res) => {
-        const orders = req.body;
-        orders.createAt = new Date();
-        const insertOrders = await orderCollection.insertOne(orders);
-        console.log(orders);
-        res.json(insertOrders);
+      const orders = req.body;
+      orders.createAt = new Date();
+      const insertOrders = await orderCollection.insertOne(orders);
+      console.log(orders);
+      res.json(insertOrders);
     })
     // get data by email
-    app.get('/orders', async (req, res)=>{
+    app.get('/orders', async (req, res) => {
       let query = {};
       const email = req.query.email;
       console.log(email);
       if (email) {
-        query = { authEmail: email};
+        query = { authEmail: email };
       }
       const cursor = orderCollection.find(query);
       const allOrders = await cursor.toArray();
@@ -176,7 +186,7 @@ async function run() {
 }
 run().catch(console.err);
 
-app.get('/',(req, res)=>{
+app.get('/', (req, res) => {
   res.send("Mega project server running successfully");
 });
 
