@@ -61,6 +61,7 @@ async function run() {
     const database = client.db(`${process.env.DB_NAME}`);
     const productCollection = database.collection("products");
     const orderCollection = database.collection("orders");
+    const userCollection = database.collection("users");
     // get data
     app.get('/products', async (req, res) => {
       // console.log(req.query);
@@ -85,7 +86,8 @@ async function run() {
     // get orders
     app.get('/orders', async (req, res) => {
       const uid = req.query.uid;
-      const query = { uid: uid };
+      const date = new Date(req.query.date).toDateString();
+      const query = { uid: uid, ExpectedDeliveryDate:date };
       console.log("query is", query);
       const cursor = orderCollection.find(query);
       const orders = await cursor.toArray();
@@ -158,7 +160,7 @@ async function run() {
     // orders collection
     app.post('/orders', async (req, res) => {
       const orders = req.body;
-      orders.createAt = new Date();
+      orders.createAt = new Date().toDateString();
       const insertOrders = await orderCollection.insertOne(orders);
       console.log(orders);
       res.json(insertOrders);
@@ -174,6 +176,46 @@ async function run() {
       const cursor = orderCollection.find(query);
       const allOrders = await cursor.toArray();
       res.json(allOrders);
+    })
+
+    app.post('/userDetails', async (req, res) => {
+      const userDetails = req.body;
+      const creationTime = new Date().toDateString();
+      userDetails.createAt = creationTime;
+      const insertUser = await userCollection.insertOne(userDetails);
+      res.json(insertUser);
+    })
+
+    app.put('/userDetails', async (req, res) => {
+      const userDetails = req.body;
+      const filter = {uid: userDetails.uid};
+      const options = { upsert: true };
+      const creationTime = new Date().toDateString();
+      userDetails.createAt = creationTime;
+      const updateUser = {$set: userDetails};
+      const insertUser = await userCollection.updateOne(filter, updateUser, options);
+      res.json(insertUser);
+      
+    })
+    // make admin
+    app.put('/users/admin', async (req,res) => {
+      const adminDetails = req.body;
+      const filter = {email:adminDetails.adminEmail};
+      const updateUserRole = {$set: {role: 'admin'}};
+      const insertAdmin = await userCollection.updateOne(filter, updateUserRole);
+      res.json(insertAdmin);
+      console.log("admin information", adminDetails);
+    })
+    // check login user is admin?
+    app.get('/users/:email', async (req, res) =>{
+      const email = req.params.email;
+      const query = {email:email};
+      const findAdmin = await userCollection.findOne(query);
+      let isAdmin = false;
+      if (findAdmin?.role === 'admin') {
+          isAdmin = true;
+      }
+      res.send({admin:isAdmin});
     })
     // use post to get data by auth email;
     // app.post('/ordersByEmail', async (req, res) => {
