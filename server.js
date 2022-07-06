@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const ObjectId = require('mongodb').ObjectId;
+const admin = require("firebase-admin");
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -11,6 +12,13 @@ app.use(cors())
 
 require('dotenv').config();
 const port = process.env.PORT || 7777;
+
+const serviceAccount = require('./mega-project-firebase-adminsdk.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 // const stars = [
 //   { name: "Lionel Messi", id: 10, position: "CF,RWF,AMF,FALSE NINE STRIKER,SS,RMF" },
@@ -55,6 +63,21 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tmhor.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
+async function verifyToken (req, res, next) {
+  if (req.headers?.authorization?.startsWith('Bearer ')) {
+    const token = req.headers.authorization.split(' ')[1];
+
+    try{
+      const decodedUser = await admin.auth().verifyIdToken(token);
+      req.decodedEmail = decodedUser.email;
+    }
+    catch{
+
+    }
+  }
+  next();
+} 
+
 async function run() {
   try {
     await client.connect();
@@ -84,7 +107,7 @@ async function run() {
     });
 
     // get orders
-    app.get('/orders', async (req, res) => {
+    app.get('/orders', verifyToken, async (req, res) => {
       const uid = req.query.uid;
       const date = new Date(req.query.date).toDateString();
       const query = { uid: uid, ExpectedDeliveryDate:date };
@@ -198,13 +221,21 @@ async function run() {
       
     })
     // make admin
-    app.put('/users/admin', async (req,res) => {
+    app.put('/users/admin', verifyToken, async (req,res) => {
       const adminDetails = req.body;
-      const filter = {email:adminDetails.adminEmail};
-      const updateUserRole = {$set: {role: 'admin'}};
-      const insertAdmin = await userCollection.updateOne(filter, updateUserRole);
-      res.json(insertAdmin);
-      console.log("admin information", adminDetails);
+      const requester = req.decodedEmail;
+      if (requester) {
+        const requesterAccount = await userCollection.findOne({email:requester});
+        if (requesterAccount.role === 'admin') {
+          const filter = {email:adminDetails.adminEmail};
+          const updateUserRole = {$set: {role: 'admin'}};
+          const insertAdmin = await userCollection.updateOne(filter, updateUserRole);
+          res.json(insertAdmin);
+        }
+        else{
+          res.status(403).json({message: 'You do not access to admin control'});
+        }
+      }
     })
     // check login user is admin?
     app.get('/users/:email', async (req, res) =>{
