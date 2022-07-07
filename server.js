@@ -1,19 +1,20 @@
 const express = require('express');
+require('dotenv').config();
 const app = express();
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const ObjectId = require('mongodb').ObjectId;
 const admin = require("firebase-admin");
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT);
+const stripe = require('stripe')(process.env.STRIPE_SECRET);
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(cors())
 
-require('dotenv').config();
 const port = process.env.PORT || 7777;
-
-const serviceAccount = require('./mega-project-firebase-adminsdk.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -77,6 +78,7 @@ async function verifyToken (req, res, next) {
   }
   next();
 } 
+
 
 async function run() {
   try {
@@ -248,11 +250,40 @@ async function run() {
       }
       res.send({admin:isAdmin});
     })
+    // get data for payment
+    app.get('/payment/:orderId', async (req, res) => {
+      const id = req.params.orderId;
+      const query = {_id: ObjectId(id)};
+      const findForPayment = await orderCollection.findOne(query);
+      res.send(findForPayment);
+    })
     // use post to get data by auth email;
     // app.post('/ordersByEmail', async (req, res) => {
     //   const ordersByEmail = req.body;
     //   console.log(ordersByEmail);
     // })
+    app.post('/create-payment-intent', async (req, res) => {
+      const paymentInfo = req.body;
+      const amount = paymentInfo.price * 100;
+      console.log(amount);
+      const paymentIntent = await stripe.paymentIntents.create({
+          currency: 'usd',
+          amount: amount,
+          payment_method_types: ['card']
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    })
+
+    // update order payment status
+    app.put('/orders/:orderId', async (req, res) => {
+      const id = req.params.orderId;
+      const payment = req.body.payment;
+      const filter = {_id: ObjectId(id)};
+      const updatePaymentStatus = {$set: {payment: payment}};
+      const insertUpdate = await orderCollection.updateOne(filter, updatePaymentStatus);
+      res.json(insertUpdate);
+    })
+
   } finally {
     // await client.close();
   }
