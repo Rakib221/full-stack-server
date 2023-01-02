@@ -18,7 +18,7 @@ const port = process.env.PORT || 7777;
 
 // admin.initializeApp({
 //   credential: admin.credential.cert(serviceAccount)
-// });
+//// });
 
 const firebaseApp = global.firebaseApp??
 admin.initializeApp({
