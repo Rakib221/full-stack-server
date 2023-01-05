@@ -100,9 +100,26 @@ async function run() {
     const userCollection = database.collection("users");
     // get data
     app.get('/products', async (req, res) => {
+      const category = req.query.category;
+      console.log("category id ",category);
       const page = req.query.page;
       const size = parseInt(req.query.numberOfProPerPage);
-      const cursor = productCollection.find({});
+      let cursor;
+      if (category.length<=0) {
+          cursor = productCollection.find({});
+          console.log("lenght ", category.length)
+      }
+      else{
+          // const query = {category: {$regex: /category.*/}};
+          const query = {category: category}
+          cursor = productCollection.find(query);
+          console.log('inside else ',category.length)
+          const findLength = cursor.length;
+          // if ((await cursor.toArray()).length <= 0) {
+          //     cursor = productCollection.find({});
+          // }
+      }
+      console.log(cursor);
       let products;
       const count = await cursor.count();
       if (page) {
