@@ -98,6 +98,7 @@ async function run() {
     const productCollection = database.collection("products");
     const orderCollection = database.collection("orders");
     const userCollection = database.collection("users");
+    const loginUserDataCollection = database.collection("loginUserData");
     // get data
     app.get('/products', async (req, res) => {
       const category = req.query.category;
@@ -106,19 +107,19 @@ async function run() {
       let cursor;
       if(category === undefined || category === '') {
           cursor = productCollection.find({});
-          console.log('undefined');
+          // console.log('undefined');
       }
       else{
           // const query = {category: {$regex: /category.*/}};
           const query = {category: category}
           cursor = productCollection.find(query);
-          console.log('inside else ',category.length)
+          // console.log('inside else ',category.length)
           const findLength = cursor.length;
           // if ((await cursor.toArray()).length <= 0) {
           //     cursor = productCollection.find({});
           // }
       }
-      console.log(cursor);
+      // console.log(cursor);
       let products;
       const count = await cursor.count();
       if (page) {
@@ -139,7 +140,7 @@ async function run() {
       const uid = req.query.uid;
       const date = new Date(req.query.date).toDateString();
       const query = { uid: uid, ExpectedDeliveryDate: date };
-      console.log("query is", query);
+      // console.log("query is", query);
       const cursor = orderCollection.find(query);
       const orders = await cursor.toArray();
       res.json(orders);
@@ -149,15 +150,15 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const findProduct = await productCollection.findOne(query);
-      console.log("this is id ", id);
+      // console.log("this is id ", id);
       res.send(findProduct);
     });
     // post data
     app.post('/products', async (req, res) => {
       const product = req.body;
-      console.log(req.body);
+      // console.log(req.body);
       const result = await productCollection.insertOne(product);
-      console.log(`A document was inserted with the _id: ${result.insertedId}`);
+      // console.log(`A document was inserted with the _id: ${result.insertedId}`);
       res.json(result);
     });
     // put data or update data
@@ -184,7 +185,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await productCollection.deleteOne(query);
-      console.log("Deleting id ", result);
+      // console.log("Deleting id ", result);
       res.json(result);
     })
     // use post to get data by keys
@@ -196,10 +197,10 @@ async function run() {
         newId = ObjectId(i);
         arrayOfId.push(newId);
       });
-      console.log("array of id's", arrayOfId);
+      // console.log("array of id's", arrayOfId);
       const query = { _id: { $in: arrayOfId } };
       // const query = { key: { $in: id } };
-      console.log("selected products id's query", query);
+      // console.log("selected products id's query", query);
       const productsById = await productCollection.find(query).toArray();
       // // res.send(productsById);
       res.json(productsById);
@@ -209,14 +210,14 @@ async function run() {
       const orders = req.body;
       orders.createAt = new Date().toDateString();
       const insertOrders = await orderCollection.insertOne(orders);
-      console.log(orders);
+      // console.log(orders);
       res.json(insertOrders);
     })
     // get data by email
     app.get('/orders', async (req, res) => {
       let query = {};
       const email = req.query.email;
-      console.log(email);
+      // console.log(email);
       if (email) {
         query = { authEmail: email };
       }
@@ -287,7 +288,7 @@ async function run() {
     app.post('/create-payment-intent', async (req, res) => {
       const paymentInfo = req.body;
       const amount = paymentInfo.price * 100;
-      console.log(amount);
+      // console.log(amount);
       const paymentIntent = await stripe.paymentIntents.create({
         currency: 'usd',
         amount: amount,
@@ -313,8 +314,15 @@ async function run() {
       const filter = { uid: uid };
       const updateUserComment = { $set: { comment: comment } };
       const insertUpdate = await userCollection.updateOne(filter, updateUserComment);
-      console.log(insertUpdate);
+      // console.log(insertUpdate);
       res.json(insertUpdate);
+    })
+    // post login user data if they accept coockies
+    app.post('/ifCoockieAcceptLoginDataStore', async(req, res) => {
+        const loginUserInfo = req.body;
+        const postLoginData = await loginUserDataCollection.insertOne(loginUserInfo);
+        // console.log("post login data ", postLoginData);
+        res.json(postLoginData);
     })
 
   } finally {
