@@ -105,9 +105,8 @@ async function run() {
       const page = req.query.page;
       const size = parseInt(req.query.numberOfProPerPage);
       let cursor;
-      if (category.length<=0) {
+      if (category.length<=0 || category.length === undefined) {
           cursor = productCollection.find({});
-          console.log("lenght ", category.length)
       }
       else{
           // const query = {category: {$regex: /category.*/}};
