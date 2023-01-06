@@ -105,9 +105,8 @@ async function run() {
       const page = req.query.page;
       const size = parseInt(req.query.numberOfProPerPage);
       let cursor;
-      let categoryLenght = '';
-      categoryLenght = category.length || '';
-      if (categoryLenght === '') {
+      categoryLenght = category.length ? category.length : '';
+      if(categoryLenght === '') {
           cursor = productCollection.find({});
       }
       else{
