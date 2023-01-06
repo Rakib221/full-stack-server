@@ -101,19 +101,12 @@ async function run() {
     // get data
     app.get('/products', async (req, res) => {
       const category = req.query.category;
-      console.log("category id ",category);
       const page = req.query.page;
       const size = parseInt(req.query.numberOfProPerPage);
-      let categoryLenght;
       let cursor;
-      if (category === undefined) {
-         categoryLenght = '';
-      }
-      else{
-        categoryLenght = category.length;
-      }
-      if(categoryLenght === '') {
+      if(category === undefined) {
           cursor = productCollection.find({});
+          console.log('undefined');
       }
       else{
           // const query = {category: {$regex: /category.*/}};
